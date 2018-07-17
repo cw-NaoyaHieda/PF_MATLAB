@@ -15,12 +15,7 @@ X_0 = -2.5;
 dT = 100;
 
 %フィルタリングやスムージングの結果のベクトル
-filter_X = ones(N, dT,'gpuArray');
-filter_weight = ones(N, dT,'gpuArray');
-filter_X_mean = ones(dT,1,'gpuArray');
-smoother_weight= ones(N, dT,'gpuArray');
-smoother_X_mean = ones(dT,1,'gpuArray');
-predict_Y_mean = ones(dT,1,'gpuArray');
+%predict_Y_mean = ones(dT,1,'gpuArray');
 
 %答え
 X = ones(dT,1,'gpuArray');
@@ -41,9 +36,18 @@ beta_est = beta;
 rho_est = rho;
 q_qnorm_est = q_qnorm;
 
-[filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta, q_qnorm, rho, X_0, filter_X, filter_weight, filter_X_mean);
-
+[filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta, q_qnorm, rho, X_0);
+[sm_weight, sm_X_mean] = particle_smoother(N, dT, beta_est, filter_X, filter_weight);
 plot(1:dT,filter_X_mean)
 hold on
 plot(1:dT,X)
+hold on
+plot(1:dT,sm_X_mean)
 hold off
+legend('filter','Answer','smoother')
+
+
+
+
+
+

@@ -23,8 +23,8 @@ function [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, b
       %リサンプリング (resample)とりあえず並列にしない
       if 1 / resample_check_weight < N / 10;
       dt
-      weight = 1.0 / N;
-      resumple_num =  resample(cs_weight,rand(N) ,N);
+      weight = repmat(1 / N, N, 1);
+      resumple_num =  resample(cs_weight,rand(1,N) ,N);
       pred_X = gpuArray(pred_X(resumple_num));
       end
       
@@ -32,7 +32,7 @@ function [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, b
       prior_X = pred_X;
       filter_weight(dt,:) = weight;
       prior_weight = weight;
-      filter_X_mean(dt) =  sum(pred_X .* weight);
+      filter_X_mean(dt) =  pred_X' * weight;
       %state_X_mean = (pred_X .* weight)(1,1);
   end
     

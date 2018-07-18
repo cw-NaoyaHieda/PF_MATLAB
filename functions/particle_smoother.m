@@ -8,9 +8,9 @@ function [sm_weight, sm_X_mean] = particle_smoother(N, dT, beta_est, filter_X, f
 	sm_X_mean(dT - 1) = sm_weight(dT - 1,:)*filter_X(dT - 1,:)';
 	for dt = (dT - 2):-1:1
 	    sum_weight = 0;
-	    %分子計算 横にnormの分子が変化、縦に分母が変化
+	    %分子計算 横にnormpdfの分子が変化、縦に分母が変化
 	    bunsi = sm_weight(dt + 1,:) * normpdf([filter_X(dt + 1,:)], [sqrt(beta_est) *  filter_X(dt, :)]', sqrt(1 - beta_est))';
-	    %分母計算 横にnormの分子が変化、縦に分母が変化    
+	    %分母計算 横にnormpdfの分子が変化、縦に分母が変化    
 	    bunbo = filter_weight(dt,:) * normpdf([filter_X(dt + 1,:)], [sqrt(beta_est) * filter_X(dt,:)]', sqrt(1 - beta_est));
 					
 			sm_weight_tmp = filter_weight(dt, :) .* bunsi ./ bunbo;

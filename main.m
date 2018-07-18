@@ -43,7 +43,7 @@ rho_est = rho;
 q_qnorm_est = q_qnorm;
 
 [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta, q_qnorm, rho, X_0);
-[sm_weight, sm_X_mean] = particle_smoother(N, dT, beta_est, filter_X, filter_weight);
+[sm_weight, sm_X_mean] = particle_smoother(N, dT, beta, filter_X, filter_weight);
 csvwrite("data/matlab_pf.csv",filter_X_mean);
 csvwrite("data/matlab_sm.csv",sm_X_mean);
 plot(1:dT,X)

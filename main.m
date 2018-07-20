@@ -6,7 +6,7 @@ gpuDevice
 rng(1012)
 
 %各変数の値
-N = 10000;
+N = 1000;
 X_0 = -2.5;
 beta = 0.75;
 rho = 0.08;
@@ -37,22 +37,32 @@ csvwrite("data/matlab_DR.csv",DR);
 %DR = icdf(pd,data(2:99,5));
 
 
-X_0_est = X_0;
+
 beta_est = beta;
-rho_est = rho;
 q_qnorm_est = q_qnorm;
+rho_est = rho;
+X_0_est = X_0;
 
 [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta, q_qnorm, rho, X_0);
 [sm_weight, sm_X_mean] = particle_smoother(N, dT, beta, filter_X, filter_weight);
-csvwrite("data/matlab_pf.csv",filter_X_mean);
-csvwrite("data/matlab_sm3.csv",sm_X_mean);
-plot(1:dT,X)
-hold on
-plot(1:dT,filter_X_mean)
-hold on
-plot(1:dT,sm_X_mean)
-hold off
-legend('Answer','filter','smoother')
+[pw_weight] = pair_wise_weight(N, dT, beta_est, filter_X, filter_weight, sm_weight);
+
+PMCEM = @(params)Q_calc(params, dT, pw_weight, filter_X, sm_weight, DR);
+first_pm = [beta_est,q_qnorm_est,rho_est,X_0_est];
+%options = optimoptions(@fminunc,'Display','iter','Algorithm','quasi-newton');
+%[params,fval,exitflag,output] = fminunc(PMCEM, first_pm, options);
+[params,fval] = fminunc(PMCEM, first_pm);
+
+
+%csvwrite("data/matlab_pf.csv",filter_X_mean);
+%csvwrite("data/matlab_sm.csv",sm_X_mean);
+%plot(1:dT,X)
+%hold on
+%plot(1:dT,filter_X_mean)
+%hold on
+%plot(1:dT,sm_X_mean)
+%hold off
+%legend('Answer','filter','smoother')
 
 
 

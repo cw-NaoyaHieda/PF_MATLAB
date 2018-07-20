@@ -21,37 +21,57 @@ dT = 100;
 X = ones(dT,1,'gpuArray');
 DR = ones(dT,1,'gpuArray');
 
-X(1) = sqrt(beta)*X_0 + sqrt(1 - beta) * random('Normal',0,1);
+opt_params = zeros(900,5);
 
-
-for i = 2:dT
+for ite = 1:30
+  X(1) = sqrt(beta)*X_0 + sqrt(1 - beta) * random('Normal',0,1);
+  for i = 2:dT
     X(i) = sqrt(beta)*X(i-1) + sqrt(1 - beta) * random('Normal',0,1);
     DR(i) = r_DR(X(i-1),q_qnorm, rho, beta);
+  end
+  %DR(1) = DR(2)*(random('Normal',0,1)*0.05+1);
+  beta_est = (1 - 0.5) * rand(1) + 0.5;
+  q_qnorm_est = (-5 + 2) * rand(1) + -2;
+  rho_est = 0.25 * rand(1);
+  X_0_est = (-4 + 1) * rand(1) + -1;
+  opt_params((ite-1) * 30 + 1,:) =  [params,fval];
+  for ite2 = 1:29
+  [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta_est, q_qnorm_est, rho_est, X_0_est);
+  [sm_weight, sm_X_mean] = particle_smoother(N, dT, beta_est, filter_X, filter_weight);
+  [pw_weight] = pair_wise_weight(N, dT, beta_est, filter_X, filter_weight, sm_weight);
+  PMCEM = @(params)Q_calc(params, dT, pw_weight, filter_X, sm_weight, DR);
+  first_pm = [beta_est,q_qnorm_est,rho_est,X_0_est];
+  [params,fval] = fminunc(PMCEM, first_pm);
+  opt_params((ite-1) * 30 + ite2 + 1,:) =  [params,fval];
+  beta_est = params(1);
+  q_qnorm_est = params(2);
+  rho_est = params(3);
+  X_0_est = params(4);
+  ite2
+  end
+  ite
 end
-DR(1) = DR(2)*(random('Normal',0,1)*0.05+1);
-csvwrite("data/matlab_X.csv",X);
-csvwrite("data/matlab_DR.csv",DR);
+
+
+csvwrite("data/opt_params.csv",opt_params);
+%csvwrite("data/matlab_X.csv",X);
+%csvwrite("data/matlab_DR.csv",DR);
 %data = csvread("data/X.csv");
 %X = data(1:98,3);
 %pd = makedist('Normal',0,1);
 %DR = icdf(pd,data(2:99,5));
 
+%beta_est = beta;
+%q_qnorm_est = q_qnorm;
+%rho_est = rho;
+%X_0_est = X_0;
 
 
-beta_est = beta;
-q_qnorm_est = q_qnorm;
-rho_est = rho;
-X_0_est = X_0;
-
-[filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta, q_qnorm, rho, X_0);
-[sm_weight, sm_X_mean] = particle_smoother(N, dT, beta, filter_X, filter_weight);
-[pw_weight] = pair_wise_weight(N, dT, beta_est, filter_X, filter_weight, sm_weight);
-
-PMCEM = @(params)Q_calc(params, dT, pw_weight, filter_X, sm_weight, DR);
-first_pm = [beta_est,q_qnorm_est,rho_est,X_0_est];
+%PMCEM = @(params)Q_calc(params, dT, pw_weight, filter_X, sm_weight, DR);
+%first_pm = [beta_est,q_qnorm_est,rho_est,X_0_est];
 %options = optimoptions(@fminunc,'Display','iter','Algorithm','quasi-newton');
 %[params,fval,exitflag,output] = fminunc(PMCEM, first_pm, options);
-[params,fval] = fminunc(PMCEM, first_pm);
+%[params,fval] = fminunc(PMCEM, first_pm);
 
 
 %csvwrite("data/matlab_pf.csv",filter_X_mean);

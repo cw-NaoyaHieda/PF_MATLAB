@@ -1,8 +1,8 @@
 function [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta_est, q_qnorm_est, rho_est, X_0_est)
   %時点がdT-1で終わることに注意(観測値に対して、使用するXが一期前であるため)
-  filter_X = ones(dT, N,'gpuArray');
-  filter_weight = ones(dT, N,'gpuArray');
-  filter_X_mean = ones(dT,1,'gpuArray');
+  filter_X = ones(dT - 1, N ,'gpuArray');
+  filter_weight = ones(dT - 1, N,'gpuArray');
+  filter_X_mean = ones(dT - 1,1,'gpuArray');
   for dt = 1:(dT - 1)
       if dt == 1
            %初期分布から　時点0と考えて
@@ -22,7 +22,7 @@ function [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, b
       resample_check_weight = sum(resample_check_weight);
       %リサンプリング (resample)とりあえず並列にしない
       if 1 / resample_check_weight < N / 10;
-      dt
+      dt;
       weight = repmat(1 / N, N, 1);
       resumple_num =  resample(cs_weight,rand(1,N) ,N);
       pred_X = gpuArray(pred_X(resumple_num));

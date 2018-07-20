@@ -1,8 +1,8 @@
 %平滑化
 function [sm_weight, sm_X_mean] = particle_smoother(N, dT, beta_est, filter_X, filter_weight)
-  sm_weight = zeros(dT, N,'gpuArray');
+  sm_weight = zeros(dT - 1, N,'gpuArray');
   sm_weight_tmp = zeros(1,N,'gpuArray');
-  sm_X_mean = ones(dT, 1,'gpuArray');
+  sm_X_mean = ones(dT - 1, 1,'gpuArray');
   %T時点のweightは変わらないのでそのまま代入
   sm_weight(dT - 1,:) = filter_weight(dT - 1,:);
 	sm_X_mean(dT - 1) = sm_weight(dT - 1,:)*filter_X(dT - 1,:)';

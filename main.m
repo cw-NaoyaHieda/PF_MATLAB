@@ -21,7 +21,7 @@ dT = 100;
 X = ones(dT,1,'gpuArray');
 DR = ones(dT,1,'gpuArray');
 
-opt_params = zeros(900,5);
+opt_params = zeros(900,7);
 
 for ite = 1:30
   X(1) = sqrt(beta)*X_0 + sqrt(1 - beta) * random('Normal',0,1);
@@ -31,18 +31,18 @@ for ite = 1:30
   end
   %DR(1) = DR(2)*(random('Normal',0,1)*0.05+1);
   beta_est = (1 - 0.5) * rand(1) + 0.5;
-  q_qnorm_est = (-5 + 2) * rand(1) + -2;
-  rho_est = 0.25 * rand(1);
-  X_0_est = (-4 + 1) * rand(1) + -1;
-  opt_params((ite-1) * 30 + 1,:) =  [params,fval];
-  for ite2 = 1:29
+  q_qnorm_est = (-3 + 2) * rand(1) + -1.5;
+  rho_est = 0.20 * rand(1);
+  X_0_est = (-3 + 2) * rand(1) + -2;
+  opt_params((ite-1) * 30 + 1,:) =  [ite,1,params,fval];
+  for ite2 = 2:30
   [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta_est, q_qnorm_est, rho_est, X_0_est);
   [sm_weight, sm_X_mean] = particle_smoother(N, dT, beta_est, filter_X, filter_weight);
   [pw_weight] = pair_wise_weight(N, dT, beta_est, filter_X, filter_weight, sm_weight);
   PMCEM = @(params)Q_calc(params, dT, pw_weight, filter_X, sm_weight, DR);
   first_pm = [beta_est,q_qnorm_est,rho_est,X_0_est];
-  [params,fval] = fminunc(PMCEM, first_pm);
-  opt_params((ite-1) * 30 + ite2 + 1,:) =  [params,fval];
+  [params,fval] = fminunc(PMCEM,first_pm)
+  opt_params((ite-1) * 30 + ite2,:) =  [ite,ite2,params,fval];
   beta_est = params(1);
   q_qnorm_est = params(2);
   rho_est = params(3);

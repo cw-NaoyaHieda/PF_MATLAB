@@ -1,11 +1,13 @@
 ---
-title: "PF_MATLABとKalmanの比較"
+title: "PF_MATLABとKalmanの比較 パーティクル100個"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+頑張ったけど、最適化計算がやはり遅いので、ちょっとパーティクル数を減らしてフィルタリングしてみる。
 
 MATLABのパーティクルフィルタがカルマンフィルタと同じ結果になっているか(コードにミスがないか確認)
 ## フィルタリング
@@ -21,17 +23,17 @@ beta <- 0.75
 q_qnorm <- -2.053749
 rho <- 0.08
 X_0 <- -2.5
-answer_X <- read.csv("data/matlab_X.csv",header = F)
-data <- read.csv("data/matlab_DR.csv",header = F)
+answer_X <- read.csv("data/X_100.csv",header = F)
+data <- read.csv("data/DR_100.csv",header = F)
 colnames(answer_X) <- c("answer")
-pf <- read.csv("data/matlab_pf.csv",header = F)
+pf <- read.csv("data/pf_100.csv",header = F)
 colnames(pf) <- c("Particle_filter")
-sm <- read.csv("data/matlab_sm.csv",header = F)
+sm <- read.csv("data/sm_100.csv",header = F)
 colnames(sm) <- c("Particle_smoother")
-sm2 <- read.csv("data/matlab_sm2.csv",header = F)
-colnames(sm2) <- c("Particle_smoother2")
-sm3 <- read.csv("data/matlab_sm3.csv",header = F)
-colnames(sm3) <- c("Particle_smoother3")
+#sm2 <- read.csv("data/matlab_sm2.csv",header = F)
+#colnames(sm2) <- c("Particle_smoother2")
+#sm3 <- read.csv("data/matlab_sm3.csv",header = F)
+#colnames(sm3) <- c("Particle_smoother3")
 ```
 
 ## Kalman
@@ -52,6 +54,8 @@ ggplot(df_res1 %>% melt("time") , aes(x=time,y=value,colour=variable))+
   geom_line() + ggtitle("X 状態変数")
 ```
 
+充分？？
+
 ## 平滑化
 
 ```{r}
@@ -63,9 +67,9 @@ smoother_X_Kalman <- fit_mod2$s[-1]
 df_res2 <- data.frame(time=c(1:99), answer_X=answer_X[-100,], 
 #                      predict_X_Kalman=fit_mod1$a,
                       sm_X_Kalman=smoother_X_Kalman,
-                      sm_X_particle=sm[-100,],
-                      sm_X_particle2=sm2[-100,],
-                      sm_X_particle3=sm3[-100,])
+                      sm_X_particle=sm[-100,])
+#                      sm_X_particle2=sm2[-100,],
+#                      sm_X_particle3=sm3[-100,])
 ggplot(df_res2 %>% melt("time") , aes(x=time,y=value,colour=variable))+
   geom_line() + ggtitle("X 状態変数")
 ```

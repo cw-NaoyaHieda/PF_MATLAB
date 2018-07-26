@@ -43,10 +43,11 @@ rho_est = rho;
 q_qnorm_est = q_qnorm;
 
 [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta, q_qnorm, rho, X_0);
-[sm_weight, sm_X_mean] = particle_smoother(N, dT, beta, filter_X, filter_weight);
+[sm_X, sm_weight, sm_X_mean] = particle_smoother(N, dT, beta, filter_X, filter_weight);
 [pw_weight] = pair_wise_weight(N, dT, beta_est, filter_X, filter_weight, sm_weight);
 PMCEM = @(params)Q_calc_nf(params, X_0, dT, pw_weight, filter_X, sm_weight, DR);
 first_pm = [beta,q_qnorm,rho];
+%options = optimoptions(@fminunc,'Display','iter','UseParallel',true,'Algorithm','quasi-newton');
 options = optimoptions(@fminunc,'Display','iter','Algorithm','quasi-newton');
 [params,fval,exitflag,output] = fminunc(PMCEM, first_pm, options);
 params

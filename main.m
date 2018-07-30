@@ -6,13 +6,13 @@ gpuDevice
 rng(1024)
 
 %各変数の値
-N = 100;
+N = 50;
 X_0 = -2.5;
 beta = 0.75;
 rho = 0.08;
 q_qnorm = icdf('Normal',0.02,0,1);
 X_0 = -2.5;
-dT = 100;
+dT = 100000;
 
 %フィルタリングやスムージングの結果のベクトル
 %predict_Y_mean = ones(dT,1,'gpuArray');

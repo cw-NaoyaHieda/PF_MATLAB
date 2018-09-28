@@ -8,6 +8,7 @@ function [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, b
            %初期分布から　時点0と考えて
            pred_X = gpuArray(sqrt(beta_est)*X_0_est - sqrt(1 - beta_est) * random('Normal',0,1, N,1));
            %重みの計算
+           size(pred_X)
            weight = g_DR_dinamic(DR(2), pred_X, q_qnorm_est, beta_est, rho_est);
       else
            pred_X = gpuArray(sqrt(beta_est)*prior_X - sqrt(1 - beta_est) * random('Normal',0,1, N,1)); 

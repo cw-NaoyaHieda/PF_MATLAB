@@ -12,7 +12,7 @@ beta = 0.75;
 rho = 0.08;
 q_qnorm = icdf('Normal',0.02,0,1);
 X_0 = -2.5;
-dT = 100;
+dT = 1000;
 
 %フィルタリングやスムージングの結果のベクトル
 %predict_Y_mean = ones(dT,1,'gpuArray');
@@ -30,9 +30,9 @@ for i = 2:dT
 end
 fprintf('X DR set\n');
 DR(1) = DR(2)*(random('Normal',0,1)*0.05+1);
-csvwrite("data_9/X_plot.csv",X);
-csvwrite("data_9/DR_plot.csv",DR);
-csvwrite("data_9/DR_mean.csv",(q_qnorm-sqrt(beta*rho)*X)/(1-rho));
+csvwrite("data/X_plot.csv",X);
+csvwrite("data/DR_plot.csv",DR);
+csvwrite("data/DR_mean.csv",(q_qnorm-sqrt(beta*rho)*X)/(1-rho));
 %data = csvread("data/X.csv");
 %X = data(1:98,3);
 %pd = makedist('Normal',0,1);
@@ -43,18 +43,16 @@ X_0_est = X_0;
 beta_est = beta;
 rho_est = rho;
 q_qnorm_est = q_qnorm;
-
 [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta, q_qnorm, rho, X_0);
 fprintf('Filter end\n');
-csvwrite('data_9/filter_X.csv',filter_X);
-csvwrite('data_9/filter_weight.csv',filter_weight)
-csvwrite('data_9/filter_mean.csv',filter_X_mean);
 [sm_X, sm_weight, sm_X_mean] = particle_smoother(N, dT, beta, filter_X, filter_weight);
 fprintf('Smoothing end\n');
-csvwrite('data_9/smoothing_mean.csv',sm_X_mean);
 [pw_weight] = pair_wise_weight(N, dT, beta_est, filter_X, filter_weight, sm_weight);
 fprintf('pw_weight set\n');
-PMCEM = @(params)Q_calc_nf(params, X_0, dT, pw_weight, filter_X, sm_weight, DR);
+
+y = randsample(N,N * 0.8);
+
+PMCEM = @(params)Q_calc_nf_end(params, X_0, dT, pw_weight, filter_X, sm_weight, DR);
 first_pm = [sig_env(beta),q_qnorm,sig_env(rho)];
 %options = optimoptions(@fminunc,'Display','iter','UseParallel',true,'Algorithm','quasi-newton');
 options = optimoptions(@fminunc,'Display','iter','Algorithm','quasi-newton');

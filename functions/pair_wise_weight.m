@@ -1,7 +1,7 @@
 %Qの計算に必要な新しいwight
 %メモリの問題で、Nがある程度大きい時は計算結果をCPUのメモリに移動
 function [pw_weight] = pair_wise_weight(N, dT, beta_est, filter_X, filter_weight, sm_weight)
-  if N > 1000
+  if N > 1000 | dT > 100000
     pw_weight = zeros(N, N, dT);
     for dt = 2:(dT - 1)
       %分母計算 横にnormpdfの分子が変化、縦に分母が変化

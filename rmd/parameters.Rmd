@@ -1,0 +1,26 @@
+---
+title: "Opt Paramaters"
+output: html_document
+---
+
+パラメータの確認
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+setwd("/home/naoya/PF_MATLAB")
+data <- read.csv("data/opt_params.csv",header=F)
+head(data)
+colnames(data) <- c("num","MCMC","beta","q","rho","x_0","f")
+data <- data %>% gather(para,value,-num,-MCMC) %>% filter(MCMC != 1)
+head(data)
+ggplot(data = data,aes(x=para,y=value)) + 
+         geom_line(aes(x = MCMC, y=value, color=as.factor(num))) +
+         facet_grid(para~.,scales = "free")
+```
+
+
+

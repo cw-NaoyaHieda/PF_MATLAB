@@ -1,0 +1,245 @@
+---
+title: "ParticleFIlter"
+output: html_document
+---
+
+```{r knitr_init, echo=FALSE, cache=FALSE}
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=TRUE,
+	             prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               fig.width=8,
+               fig.height=6)
+opts_knit$set(width=75)
+set.seed(2017)
+```
+
+
+```{r package,echo=FALSE}
+#パッケージのインストールと読み込み
+#持ってないパッケージはインストールする
+targetPackages <- c("ggplot2","tidyverse") 
+newPackages <- targetPackages[!(targetPackages %in% installed.packages()[,"Package"])]
+if(length(newPackages)) install.packages(newPackages, repos = "http://cran.us.r-project.org")
+for(package in targetPackages) library(package, character.only = T)
+```
+
+
+やっていることの整理
+
+
+下記の式に従って乱数発生とParticleFilter
+  
+観測方程式  
+状態方程式
+$$
+\Phi^{-1}(DR) =   \frac{(\Phi^{-1}(q) - \sqrt{\rho\beta}X_t)}{ \sqrt{1-\rho}} - \sqrt{\frac{\rho(1 - \beta)}{ (1 - \rho)}}\epsilon \hspace{4mm} \epsilon \sim N(0,1)\\
+X_{t+1} = \sqrt{\beta}X_{t} +  \sqrt{1-\beta}\epsilon \hspace{4mm} \epsilon \sim N(0,1)
+$$
+これらを尤度関数に直すと
+$$
+f(\Phi^{-1}(DR_{t+1}))=\dfrac {1}{\sqrt{2\pi}\sqrt{\frac{\rho(1 - \beta)}{ (1 - \rho)}}}\exp\biggl\{ -\dfrac {(\Phi^{-1}(DR_{t+1})- \frac{(\Phi^{-1}(q) - \sqrt{\rho\beta}X_t)}{ \sqrt{1-\rho}})^2}{2\frac{\rho(1 - \beta)}{ (1 - \rho)}}\biggr\}\\
+f(X_{t+1})=\dfrac{1}{\sqrt{2\pi}\sqrt{1-\beta}}\exp\biggl\{ -\dfrac {(X_{t+1}-\sqrt{\beta}x_{t})^2}{2(1-\beta)}\biggr\}
+$$
+
+
+目的関数は、
+
+$$
+EM(\theta)=\sum_{i=1}^N \omega_{0|T}^{(i)} log\hspace{1mm} {P_{\theta0}}_{dist}(X_0^{(i)})\\
++\sum_{t=1}^T \sum_{i=1}^N\sum_{j=1}^N \omega_{t|T}^{(ij)} log\hspace{1mm} {P_{\theta}}_{dist}(X_{t-1}^{(i)}|X_{t}^{(j)})\\
++\sum_{t=0}^T \sum_{i=1}^N \omega_{t|T}^{(i)} log\hspace{1mm} {Q_{\theta}}_{dist}(X_t^{(i)}|Y_t) 
+$$
+上から、初期値から次のParticleが発生する尤度,各Particleが一期前のParticleが発生する尤度,パーティクルからYが発生する尤度。
+
+---
+title: "ParticleFIlter"
+output: html_document
+---
+
+
+やっていることの整理
+
+
+下記の式に従って乱数発生とParticleFilter
+  
+観測方程式  
+状態方程式
+$$
+DR =   \frac{(\Phi^{-1}(q) - \sqrt{\rho\beta}X_t)}{ \sqrt{1-\rho}} - \sqrt{\frac{\rho(1 - \beta)}{ (1 - \rho)}}\epsilon \hspace{4mm} \epsilon \sim N(0,1)\\
+x_{t+1} = \sqrt{\beta}x_{t} +  \sqrt{1-\beta}\epsilon \hspace{4mm} \epsilon \sim N(0,1)
+$$
+これらを尤度関数に直すと
+$$
+f(DR_{t+1})=\dfrac {1}{\sqrt{2\pi}\sqrt{\frac{\rho(1 - \beta)}{ (1 - \rho)}}}\exp\biggl\{ -\dfrac {(DR_{t+1}- \frac{(\Phi^{-1}(q) - \sqrt{\rho\beta}X_t)}{ \sqrt{1-\rho}})^2}{2\frac{\rho(1 - \beta)}{ (1 - \rho)}}\biggr\}\\
+f(x_{t+1})=\dfrac{1}{\sqrt{2\pi}\sqrt{1-\beta}}\exp\biggl\{ -\dfrac {(x_{t+1}-\sqrt{\beta}x_{t})^2}{2(1-\beta)}\biggr\}
+$$
+
+
+目的関数は、
+
+$$
+EM(\theta)=\sum_{i=1}^N \omega_{0|T}^{(i)} log\hspace{1mm} {P_{\theta0}}_{dist}(X_0^{(i)})\\
++\sum_{t=1}^T \sum_{i=1}^N\sum_{j=1}^N \omega_{t|T}^{(ij)} log\hspace{1mm} {P_{\theta}}_{dist}(X_{t-1}^{(i)}|X_{t}^{(j)})\\
++\sum_{t=0}^T \sum_{i=1}^N \omega_{t|T}^{(i)} log\hspace{1mm} {Q_{\theta}}_{dist}(X_t^{(i)}|Y_t) 
+$$
+上から、初期値から次のParticleが発生する尤度,各Particleが一期前のParticleが発生する尤度,パーティクルからYが発生する尤度。
+
+設定しているパラメータでの尤度関数の形状を確認
+```{r}
+DR_N <- function(DR, X, beta, rho, q){
+  dnorm(qnorm(DR), (qnorm(q) - sqrt(rho*beta)*X)/(sqrt(1-rho)), sqrt(rho*(1-beta)/(1-rho)))
+}
+
+DR_N_plot_DR <- function(DR) {
+  DR_N(DR, X, beta, rho, q)
+}
+#DR = 0.01
+X = 0.06
+beta = 0.75
+rho = 0.08
+q = 0.02
+curve(DR_N_plot_DR,xlim = c(0,0.1))
+```
+
+パラメータいじってみる
+```{r}
+#DR = 0.01
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,2.5))
+par(new=T,col=5)
+beta = 0.6
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,2.5))
+par(new=T,col=2)
+beta = 0.5
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,2.5))
+par(new=T,col=3)   
+beta = 0.4
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,2.5))
+par(new=T,col=4)   
+beta = 0.3
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,2.5))
+beta = 0.75 #元に戻す
+```
+
+```{r}
+#DR = 0.01
+rho = 0.01
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,5))
+par(new=T,col=2)
+rho = 0.05
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,5))
+par(new=T,col=3)
+rho = 0.1
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,5))
+par(new=T,col=4)
+rho = 0.15
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,5))
+par(new=T,col=5)
+rho = 0.3
+curve(DR_N_plot_DR,xlim = c(0,0.1),ylim=c(0,5))
+rho = 0.08 #元に戻す
+```
+
+
+よく陥るパラメータと本来の状態の比較
+
+```{r}
+#DR = 0.01
+rho = 0.1
+beta = 0.25
+curve(DR_N_plot_DR,xlim = c(0,0.2),ylim=c(0,2.5))
+par(new=T,col=2)
+rho = 0.08
+beta = 0.75
+curve(DR_N_plot_DR,xlim = c(0,0.2),ylim=c(0,2.5))
+```
+
+
+黒が推定、赤が本来のパラメータです
+
+こう見るとサンプル期間が増えればいけそうな気がするんですが・・・
+
+
+ParticleFilterを使わないで、状態変数は分かっているものと考えて、パラメータ推定をするなら
+```{r}
+q = 0.02
+rho = 0.08
+beta = 0.75
+X <- rep(0,1000)
+DR <- rep(0,1000)
+X[1] <- 0.07
+for(i in 1:999){
+  X[i + 1] <- sqrt(beta)*X[i] + sqrt(1-beta)*rnorm(1)
+  DR[i + 1] <- pnorm((qnorm(q) - sqrt(rho * beta) * X[i])/sqrt(1-rho) 
+  - sqrt(rho*(1-beta)/(1-rho))*rnorm(1))
+}
+plot(c(1:1000),X,type="l")
+plot(c(1:1000),DR,type="l")
+```
+
+
+```{r}
+sig<-function(x){(tanh(x)+1)/2}
+sig_env<-function(y){(1/2)*log(y/(1-y))}
+
+tmp_opt <- function(DR , first_parameter = c(q,rho,beta)){
+   log_lik<- function(first_parameter){
+    first_parameter <- sig(first_parameter)
+    tmp  <- DR_N(DR = DR[-1],X = X[-1000],
+                 q = first_parameter[1], 
+                 rho = first_parameter[2], 
+                 beta = first_parameter[3]) %>%
+       log() %>% sum()
+    -tmp
+   }
+  
+   optim(first_parameter,log_lik)
+}
+
+est <- tmp_opt(DR,first_parameter = c(0.04,0.1,0.9))
+
+sig(est$par)
+
+
+```
+
+
+割と推定できる。(サンプル数100でもそれらしい値になることは確認)
+つまり分布の問題ではない？
+
+```{r}
+sig<-function(x){(tanh(x)+1)/2}
+sig_env<-function(y){(1/2)*log(y/(1-y))}
+
+tmp_opt <- function(DR , first_parameter = c(q,rho,beta)){
+   log_lik<- function(first_parameter){
+    first_parameter <- sig(first_parameter)
+    tmp  <- DR_N(DR = DR[-1],X = X[-1000],
+                 q = first_parameter[1], 
+                 rho = first_parameter[2], 
+                 beta = first_parameter[3]) %>%
+       log() %>% sum()
+    tmp2 <- dnorm(X[-1], sqrt(beta) * X[-100], (1 - sqrt(1-beta))) %>% log() %>% sum()
+    - tmp - tmp2 
+   }
+  
+   optim(first_parameter,log_lik)
+}
+
+est <- tmp_opt(DR,first_parameter = c(0.04,0.1,0.9))
+
+sig(est$par)
+
+```
+
+
+
+
+

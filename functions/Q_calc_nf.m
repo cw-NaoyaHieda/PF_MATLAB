@@ -1,7 +1,7 @@
 function [Q] = Q_calc_nf(params, X_0_est, dT, pw_weight, filter_X, sm_weight, DR)
-  beta_est = params(1);
+  beta_est = sig(params(1));
   q_qnorm_est = params(2);
-  rho_est = params(3);
+  rho_est = sig(params(3));
   Q_state = 0;
   Q_obeserve = 0;
   first_state = 0;

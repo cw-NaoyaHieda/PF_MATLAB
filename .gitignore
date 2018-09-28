@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.html
+*.Rproj
+data
+data_9
+pathdef.m
+swqp.sh
+swapfile
+*/*.html

@@ -5,7 +5,7 @@
 *.html
 *.Rproj
 data
-data_9
+data_9/*.csv
 pathdef.m
 swqp.sh
 swapfile

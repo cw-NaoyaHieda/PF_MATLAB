@@ -12,7 +12,8 @@ tmp1 <- particle %>% gather(N, particle, -dT)
 particle <- cbind(dT = c(1:dt),particle_weight)
 tmp2 <- particle %>% gather(N, particle_weight, -dT)
 
-particle_data <- right_join(tmp1,tmp2,by=c('dT','N')) 
+particle_data <- right_join(tmp1,tmp2,by=c('dT','N'))
+particle_data <- cbind(particle_data,particle_data$particle_weight*10)
 write.table(particle_data,'plot_particle.csv',row.names = F, col.names = F,sep = ',')
 
 filter_mean <- read.csv('filter_mean.csv',header = FALSE)

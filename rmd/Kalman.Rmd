@@ -1,6 +1,8 @@
 ---
 title: "PF_MATLABとKalmanの比較 パーティクル100個"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -23,13 +25,16 @@ beta <- 0.75
 q_qnorm <- -2.053749
 rho <- 0.08
 X_0 <- -2.5
-answer_X <- read.csv("data/X_100.csv",header = F)
-data <- read.csv("data/DR_100.csv",header = F)
-colnames(answer_X) <- c("answer")
-pf <- read.csv("data/matlab_pf_100.csv",header = F)
-colnames(pf) <- c("Particle_filter")
-sm <- read.csv("data/matlab_sm_100.csv",header = F)
-colnames(sm) <- c("Particle_smoother")
+answer_X <- read.csv("data_9/X_plot.csv",header = F)
+answer_X <- answer_X[-dim(answer_X)[1],]
+data <- read.csv("data_9/DR_plot.csv",header = F)
+data <- data[-1,]
+#colnames(answer_X) <- c("answer")
+pf <- read.csv("data_9/filter_mean.csv",header = F)
+#colnames(pf) <- c("Particle_filter")
+sm <- read.csv("data_9/smoothing_mean.csv",header = F)
+dT = dim(sm)[1]+1
+#colnames(sm) <- c("Particle_smoother")
 #sm2 <- read.csv("data/matlab_sm2.csv",header = F)
 #colnames(sm2) <- c("Particle_smoother2")
 #sm3 <- read.csv("data/matlab_sm3.csv",header = F)
@@ -41,15 +46,15 @@ colnames(sm) <- c("Particle_smoother")
 ```{r}
 mod1 <- dlm(m0=beta*(-2.5), C0=1 - beta, FF=-sqrt(beta*rho)/sqrt(1-rho),
              V=rho*(1-beta)/(1-rho), GG=sqrt(beta), W=1-beta )
-fit_mod1 <- dlmFilter(data[-1,]-q_qnorm/sqrt(1-rho), mod1)
+fit_mod1 <- dlmFilter(data-q_qnorm/sqrt(1-rho), mod1)
 str(fit_mod1, 1)
 ```
 
 ```{r}
-df_res1 <- data.frame(time=c(1:99), answer_X=answer_X[-100,], 
+df_res1 <- data.frame(time=c(1:(dT-1)), answer_X=answer_X, 
 #                      predict_X_Kalman=fit_mod1$a,
                       filter_X_Kalman=fit_mod1$m[-1],
-                      filter_X_particle=pf[-100,])
+                      filter_X_particle=pf)
 ggplot(df_res1 %>% melt("time") , aes(x=time,y=value,colour=variable))+
   geom_line() + ggtitle("X 状態変数")
 ```
@@ -59,15 +64,15 @@ ggplot(df_res1 %>% melt("time") , aes(x=time,y=value,colour=variable))+
 ## 平滑化
 
 ```{r}
-fit_mod2 <- dlmSmooth(data[-1,]-q_qnorm/sqrt(1-rho),mod1)
+fit_mod2 <- dlmSmooth(fit_mod1)
 smoother_X_Kalman <- fit_mod2$s[-1]
 ```
 
 ```{r}
-df_res2 <- data.frame(time=c(1:99), answer_X=answer_X[-100,], 
+df_res2 <- data.frame(time=c(1:(dT-1)), answer_X=answer_X, 
 #                      predict_X_Kalman=fit_mod1$a,
                       sm_X_Kalman=smoother_X_Kalman,
-                      sm_X_particle=sm[-100,])
+                      sm_X_particle=sm)
 #                      sm_X_particle2=sm2[-100,],
 #                      sm_X_particle3=sm3[-100,])
 ggplot(df_res2 %>% melt("time") , aes(x=time,y=value,colour=variable))+

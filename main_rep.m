@@ -7,7 +7,7 @@ rng(1024)
 clear global;
 reset(gpuDevice(1));
 %各変数の値
-N = 100;
+N = 1000;
 X_0 = -2.5;
 beta = 0.75;
 rho = 0.08;
@@ -57,14 +57,6 @@ for count2 = 1:20
     [sm_X, sm_weight, sm_X_mean] = particle_smoother(N, dT, beta_est, filter_X, filter_weight);
     fprintf('Smoothing end\n');
     %csvwrite('data_9/smoothing_mean.csv',sm_X_mean);
-    
-    %アンサンブルな部分
-    y = randsample(N,N * ens_rate);
-    filter_X = filter_X(:,y);
-    filter_weight = filter_weight(:,y)./sum(filter_weight(:,y),2);
-    sm_weight = sm_weight(:,y)./sum(sm_weight,2);
-    N = N * ens_rate;
-    
     [pw_weight] = pair_wise_weight(N, dT, beta_est, filter_X, filter_weight, sm_weight);
     fprintf('pw_weight set\n');
     
@@ -84,7 +76,7 @@ for count2 = 1:20
   end
 
 end
-csvwrite('data_ens/parameter.csv',params_opter)
+csvwrite('data_rep/parameter.csv',params_opter)
 plot(1:dT,X)
 hold on
 plot(1:(dT-1),filter_X_mean)

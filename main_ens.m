@@ -13,17 +13,17 @@ beta = 0.75;
 rho = 0.08;
 q_qnorm = icdf('Normal',0.02,0,1);
 X_0 = -2.5;
-dT = 100;
+dT = 1000;
 ens_rate = 0.7;
 %フィルタリングやスムージングの結果のベクトル
 %predict_Y_mean = ones(dT,1,'gpuArray');
 params_opter =  ones(20*51,6);
 %答え
-X = ones(dT,1,'gpuArray');
-DR = ones(dT,1,'gpuArray');
+X = ones(dT,1);
+DR = ones(dT,1);
 
 
-for count2 = 1:20
+for count2 = 1:10
 
   X(1) = sqrt(beta)*X_0 + sqrt(1 - beta) * random('Normal',0,1);
   for i = 2:dT
@@ -78,13 +78,17 @@ for count2 = 1:20
     fval
     params_opter((count2-1) * 51 + count + 1,:) = [count2,count,params,fval];
     N = N / ens_rate;
+    N = round(N);
     beta_est = sig(params(1));
     q_qnorm_est = params(2);
     rho_est = sig(params(3));
+    count2
+    count
+    reset(gpuDevice(1));
   end
 
 end
-csvwrite('data_ens/parameter.csv',params_opter)
+csvwrite('data_ens/parameter0930_2226_1000_800.csv',params_opter)
 plot(1:dT,X)
 hold on
 plot(1:(dT-1),filter_X_mean)

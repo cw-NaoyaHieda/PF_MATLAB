@@ -7,23 +7,22 @@ rng(1024)
 clear global;
 reset(gpuDevice(1));
 %各変数の値
-N = 1000;
+N = 800;
 X_0 = -2.5;
 beta = 0.75;
 rho = 0.08;
 q_qnorm = icdf('Normal',0.02,0,1);
 X_0 = -2.5;
-dT = 100;
+dT = 1000;
 ens_rate = 0.7;
 %フィルタリングやスムージングの結果のベクトル
 %predict_Y_mean = ones(dT,1,'gpuArray');
-params_opter =  ones(20*51,6);
+params_opter =  ones(21*10,6);
 %答え
-X = ones(dT,1,'gpuArray');
-DR = ones(dT,1,'gpuArray');
+X = ones(dT,1);
+DR = ones(dT,1);
 
-
-for count2 = 1:20
+for count2 = 1:10
 
   X(1) = sqrt(beta)*X_0 + sqrt(1 - beta) * random('Normal',0,1);
   for i = 2:dT
@@ -42,13 +41,13 @@ for count2 = 1:20
   
   
   X_0_est = X_0;
-  beta_est = beta + random('Normal',0, 0.1) - 0.05;
+  beta_est = beta + random('Normal',0, 0.1);
   rho_est = rho + random('Normal',0, 0.01);
   q_qnorm_est = q_qnorm + random('Normal',0, 1);
   first_pm = [sig_env(beta_est),q_qnorm_est,sig_env(rho_est)];
-  params_opter((count2-1) * 51 + 1,:) = [count2, 0, first_pm,0];
+  params_opter((count2-1) * 1 + 1,:) = [count2, 0, first_pm,0];
   
-  for count = 1:50
+  for count = 1:20
     [filter_X, filter_weight, filter_X_mean] = particle_filter(N, dT, DR, beta_est, q_qnorm_est, rho_est, X_0);
     fprintf('Filter end\n');
     %csvwrite('data_9/filter_X.csv',filter_X);
@@ -68,15 +67,16 @@ for count2 = 1:20
     params
     PMCEM(first_pm)
     fval
-    params_opter((count2-1) * 51 + count + 1,:) = [count2,count,params,fval];
-    N = N / ens_rate;
+    params_opter((count2-1) * 21 + count + 1,:) = [count2,count,params,fval];
     beta_est = sig(params(1));
     q_qnorm_est = params(2);
     rho_est = sig(params(3));
+    clear global;
+    reset(gpuDevice(1));
   end
 
 end
-csvwrite('data_rep/parameter.csv',params_opter)
+csvwrite('data_rep/parameter_1004_1056_800_1000.csv',params_opter)
 plot(1:dT,X)
 hold on
 plot(1:(dT-1),filter_X_mean)

@@ -1,5 +1,5 @@
 ---
-title: "PF_MATLABとKalmanの比較 パーティクル100個"
+title: "PF_MATLABとKalmanの比較 パーティクル1000個"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -9,9 +9,9 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-頑張ったけど、最適化計算がやはり遅いので、ちょっとパーティクル数を減らしてフィルタリングしてみる。
 
 MATLABのパーティクルフィルタがカルマンフィルタと同じ結果になっているか(コードにミスがないか確認)
+
 ## フィルタリング
 
 ```{r }
@@ -59,7 +59,7 @@ ggplot(df_res1 %>% melt("time") , aes(x=time,y=value,colour=variable))+
   geom_line() + ggtitle("X 状態変数")
 ```
 
-充分？？
+
 
 ## 平滑化
 

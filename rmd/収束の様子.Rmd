@@ -25,3 +25,4 @@ ggplot(plot_d,aes(x=x,y=value,color=as.factor(group))) +
   geom_line() + facet_wrap(~variable, scales="free")
 ```
 
+
